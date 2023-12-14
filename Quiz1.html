@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz 1</title>
+    <style>
+        .quiz-container {
+            text-align: center;
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+        }
+
+        #question-container {
+            margin-bottom: 20px;
+        }
+
+        button {
+            margin: 5px;
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        .correct-answer {
+            background-color: lightgreen !important;
+        }
+
+        .incorrect-answer {
+            background-color: #ff9999 !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h1>Quiz 1</h1>
+        <div id="question-container">
+            <h2 id="question"></h2>
+            <div id="choices"></div>
+        </div>
+        <div id="result-container">
+            <p id="result"></p>
+            <button id="next-btn" onclick="nextQuestion()" style="display: none;">Next</button>
+        </div>
+
+        <script>
+            const allQuestions = [
+                { text: 'What does HTML stand for?', choices: ['Hyper Text Markup Language', 'High Tech Machine Learning', 'Hyper Transfer Multimedia Language'], answer: 1 },
+                { text: 'Which tag is used to create a hyperlink in HTML?', choices: ['Image', 'Hyperlink', 'Paragraph'], answer: 2 },
+                { text: 'Which HTML element is used to define the structure of an HTML document, including the head and body sections?', choices: ['body', 'head', 'html'], answer: 3 },
+                { text: 'What is the purpose of the alt attribute in an HTML image tag?', choices: ['Alignment of the image', 'Alternative text for screen readers', 'Image source URL'], answer: 2 },
+                { text: 'Which CSS property is used to control the spacing between lines of text?', choices: ['margin', 'padding', 'line-height'], answer: 3 },
+                { text: 'What does HTML stand for?', choices: ['Hyper Text Markup Language', 'High Tech Machine Learning', 'Hyper Transfer Multimedia Language'], answer: 1 },
+                { text: 'What is the purpose of the alt attribute in an HTML image tag?', choices: ['Alternative text for screen readers', 'Image source URL', 'Alignment of the image'], answer: 3 },
+                { text: 'Which HTML element is used to define the structure of an HTML document, including the head and body sections?', choices: ['html', 'head', 'body'], answer: 2 },
+                { text: 'What is the correct HTML element for the largest heading?', choices: ['‹h1›', '‹head›', '‹h6›'], answer: 1 },
+                { text: 'Which attribute is used to define inline styles in HTML?', choices: ['style', 'id', 'class'], answer: 2 },
+                { text: 'In HTML, what does the ‹br› tag represent?', choices: ['Break line', 'Bold text', 'Bullet point'], answer: 3 },
+                { text: 'Which HTML element is used to display a picture?', choices: ['‹img›', '‹picture›', '‹image›'], answer: 1 },
+                { text: 'What is the correct HTML for creating a hyperlink?', choices: ['‹a href="https://www.example.com"›Link‹/a›', '‹link rel="stylesheet" href="style.css"›', '‹p›https://www.example.com‹/p›'], answer: 2 },
+                { text: 'Which HTML element is used to define a list item?', choices: ['‹li›', '‹ul›', '‹ol›'], answer: 3 }
+            ];
+
+            const questions = getRandomQuestions(allQuestions, 3);
+            let currentQuestion = 0, score = 0, quizStartTime;
+
+            function startQuiz() { quizStartTime = new Date().getTime(); }
+            function stopQuiz() { return ((new Date().getTime() - quizStartTime) / 1000).toFixed(2); }
+
+            function initializeQuiz() { showQuestion(); }
+
+            function getRandomQuestions(allQuestions, count) {
+                return [...allQuestions].sort(() => Math.random() - 0.5).slice(0, count);
+            }
+
+            function showQuestion() {
+                const currentQuestionObj = questions[currentQuestion];
+                document.getElementById('question').innerText = currentQuestionObj.text;
+
+                const choicesHtml = currentQuestionObj.choices.map((choice, index) =>
+                    `<button onclick="checkAnswer(${index + 1})">${choice}</button>`
+                ).join('');
+
+                document.getElementById('choices').innerHTML = choicesHtml;
+            }
+
+            function checkAnswer(selectedChoice) {
+                if (currentQuestion === 0) startQuiz();
+
+                const selectedButton = document.querySelectorAll('#choices button')[selectedChoice - 1];
+                const correctAnswerIndex = questions[currentQuestion].answer - 1;
+                const correctAnswerButton = document.querySelectorAll('#choices button')[correctAnswerIndex];
+
+                if (selectedChoice === questions[currentQuestion].answer) {
+                    score++;
+                    document.getElementById('result').innerText = 'Correct!';
+                    selectedButton.classList.add('correct-answer');
+                } else {
+                    correctAnswerButton.classList.add('correct-answer');
+                    selectedButton.classList.add('incorrect-answer');
+                    document.getElementById('result').innerText = `Incorrect. Correct answer: ${questions[currentQuestion].choices[correctAnswerIndex]}`;
+                }
+
+                document.getElementById('choices').style.pointerEvents = 'none';
+                document.getElementById('next-btn').style.display = 'block';
+                document.getElementById('result-container').style.display = 'block';
+
+                if (currentQuestion === questions.length - 1) {
+                    document.getElementById('next-btn').style.display = 'none';
+                    showFinalScore();
+                    document.getElementById('go-back-btn').style.display = 'inline-block';  
+                }
+            }
+
+            function nextQuestion() {
+                currentQuestion++;
+
+                if (currentQuestion < questions.length) {
+                    showQuestion();
+                    resetQuizState();
+                } else {
+                    showFinalScore();
+                }
+            }
+
+            function showFinalScore() {
+                const quizElapsedTime = stopQuiz();
+                const resultContainer = document.getElementById('result-container');
+
+                resultContainer.innerHTML = `<p>Final Score: ${score}/${questions.length}</p>`;
+                resultContainer.innerHTML += `<p>Time taken: ${quizElapsedTime} seconds</p>`;
+
+                localStorage.setItem('finalScore', resultContainer.innerHTML);
+            }
+
+            function resetQuizState() {
+                document.getElementById('choices').style.pointerEvents = 'auto';
+                document.getElementById('result').innerText = '';
+                document.getElementById('result-container').style.display = 'none';
+                document.getElementById('next-btn').style.display = 'none';
+                clearAnswerStyles();
+            }
+
+            function clearAnswerStyles() {
+                document.querySelectorAll('#choices button').forEach(button => button.classList.remove('correct-answer', 'incorrect-answer'));
+            }
+
+            initializeQuiz();
+        </script>
+        <a href="Home.html"><button id="go-back-btn" style="display: none;">Go Back</button></a>
+    </div>
+</body>
+</html>
